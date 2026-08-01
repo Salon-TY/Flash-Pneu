@@ -191,6 +191,20 @@ Specs dans `.claude/agents/` (chaque fichier = un prompt spécialisé) :
 
 Workflow séquentiel : cadrage → data → frontend → PDF → review. Robbie fait le lien entre les agents (copier-coller des outputs). Les agents ne communiquent pas entre eux.
 
+## Pièges connus
+
+Bugs déjà rencontrés et corrigés en prod — documentés pour ne pas les réintroduire. **Règle : à chaque bug corrigé, l'ajouter ici sans qu'on ait besoin de le demander.**
+
+### Trigger `handle_new_user` jamais attaché à `auth.users`
+- **Symptôme** : après inscription, `company_settings` reste vide pour le compte — l'onboarding ne peut rien mettre à jour (le bouton "Enregistrer" ne fait rien, en silence).
+- **Cause** : `handle_new_user()` est bien définie dans `schema.sql`/`migration-lot1.sql`, mais aucun `CREATE TRIGGER ... AFTER INSERT ON auth.users` ne l'attache réellement en base — elle n'était jamais exécutée à l'inscription.
+- **Règle** : après toute migration touchant un trigger sur `auth.users`, vérifier son attachement réel en base (pas juste sa définition dans le SQL versionné) ; côté code, ne jamais supposer qu'une ligne dépendante d'un trigger existe déjà — upsert plutôt qu'update nu.
+
+### Fonction RPC `dashboard_money_stats` absente du SQL versionné
+- **Symptôme** : 404 sur `/rest/v1/rpc/dashboard_money_stats` au chargement du dashboard, y compris avec la service role key (donc pas un problème de droits).
+- **Cause** : la fonction est référencée dans `queries.ts` et déclarée dans `types.ts`, mais n'a jamais été créée par un `CREATE FUNCTION` dans `schema.sql` ni `migration-lot1.sql` — créée un jour à la main dans le SQL Editor, jamais versionnée.
+- **Règle** : toute fonction/RPC créée à la main dans Supabase SQL Editor doit être copiée immédiatement dans un fichier de migration versionné, sinon elle disparaît des schémas de référence sans que personne ne puisse la recréer.
+
 ## Phase actuelle
 
 🚧 **Phase 1 : Chirurgie** — retrait de tout le code spécifique dératisation (tables, routes, composants, vocabulaire, couleurs). Objectif : build vert avec un squelette fonctionnel mais vide de métier.

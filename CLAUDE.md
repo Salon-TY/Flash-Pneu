@@ -176,6 +176,15 @@ Voir `MODULES.md` pour le guide complet. En résumé :
 8. **queries.ts** : ajouter les hooks pour les nouvelles tables
 9. **schemas.ts** : ajouter les schémas Zod + constantes métier
 10. **Build** : `bun run build` doit être vert avant tout commit
+11. **Restes de fork à vérifier** : un grep texte sur le vocabulaire de l'ancien métier ne suffit pas — certains restes sont visuels/binaires ou dans des chaînes construites dynamiquement. Vérifier explicitement chacun de ces points :
+    - Icônes `public/icon-192.png` / `icon-512.png` (favicon) — à régénérer pour le nouveau métier
+    - `apple-touch-icon` (lien dans le head de `src/routes/__root.tsx`)
+    - `manifest.webmanifest` : `name` / `short_name` / `description` / chemins des icônes
+    - `<title>` du head (`src/routes/__root.tsx`)
+    - `<meta name="description">` du head (idem)
+    - Logos de secours dans les templates PDF (`src/routes/_app.factures.$id.tsx` et `_app.devis.$id.tsx`, classe `.logo-icon` — souvent un emoji en dur)
+    - Taglines en dur sous le nom de société dans ces mêmes templates PDF
+    - Presets par défaut insérés par `handle_new_user()` dans le SQL de migration (`service_presets`)
 
 ## Subagents Claude Code
 

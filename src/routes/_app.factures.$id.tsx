@@ -576,10 +576,10 @@ function FactureDetail() {
     const bodyHtml = `
   <div class="header">
     <div class="logo-block">
-      ${s?.logo_url ? `<img src="${s.logo_url}" style="max-height:48px;max-width:120px;object-fit:contain;display:block" alt="Logo">` : `<div class="logo-icon">🐀</div>`}
+      ${s?.logo_url ? `<img src="${s.logo_url}" style="max-height:48px;max-width:120px;object-fit:contain;display:block" alt="Logo">` : `<div class="logo-icon">🔧</div>`}
       <div class="logo-text">
         <div class="name">${s?.nom ?? ""}</div>
-        <div class="sub">Dératisation · Désinsectisation</div>
+        <div class="sub">Montage · Équilibrage · Dépannage</div>
       </div>
     </div>
     <div class="header-coords">

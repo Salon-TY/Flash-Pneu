@@ -67,8 +67,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
-      { title: `${APP_NAME} — Gestion dératiseur` },
-      { name: "description", content: "Application de gestion pour technicien dératiseur indépendant." },
+      { title: `${APP_NAME} — Gestion pneumaticien` },
+      { name: "description", content: "Application de gestion pour pneumaticien indépendant : vente, montage, dépannage." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

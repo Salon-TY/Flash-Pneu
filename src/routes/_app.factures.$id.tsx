@@ -96,17 +96,9 @@ function statutLabel(v: string) {
 // ─── Edit form ─────────────────────────────────────────────────────────────
 
 const PRESETS_DEFAULT = [
-  { description: "Désinsectisation + Dératisation", prix_unitaire_ht: 208.33 },
-  {
-    description:
-      "Désinsectisation + Souscription contrat annuel - Formule préventive contre les insectes et rongeurs (3 passages sur 12 mois)",
-    prix_unitaire_ht: 90.0,
-  },
-  {
-    description:
-      "Désinsectisation + Souscription contrat annuel - Formule préventive contre les insectes et rongeurs (12 passages sur 12 mois)",
-    prix_unitaire_ht: 300.0,
-  },
+  { description: "Montage pneu (forfait)", prix_unitaire_ht: 70.0 },
+  { description: "Équilibrage (par roue)", prix_unitaire_ht: 15.0 },
+  { description: "Réparation crevaison", prix_unitaire_ht: 40.0 },
 ];
 
 function EditFactureForm({

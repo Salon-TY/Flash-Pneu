@@ -424,7 +424,7 @@ function NouvelleFacture() {
                   <Textarea
                     rows={2}
                     {...form.register(`lines.${i}.description`)}
-                    placeholder="Ex. Désinsectisation + Dératisation"
+                    placeholder="Ex. Montage pneu (forfait)"
                   />
                 </Field>
                 <div className="grid gap-3 sm:grid-cols-2">

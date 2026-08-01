@@ -1,56 +1,52 @@
-# CLAUDE.md — socle-pme (template SaaS multi-tenant pour PME)
+# CLAUDE.md — Flash Pneu (gestion pneumaticien mobile Paris/IDF)
 
 > Document de contexte pour Claude Code. À la racine du repo, il est lu automatiquement à chaque session. Tenir à jour au fil des évolutions.
 >
-> Ce repo est un **template réutilisable** (le « socle ») à partir duquel on crée des applications de gestion sur-mesure pour des PME et commerces de proximité. Chaque nouveau projet métier est un fork de ce socle auquel on ajoute une **couche métier** spécifique (tables, routes, composants, vocabulaire).
-
-## Origine
-
-Extrait de `derat-saas` (app de gestion pour dératiseurs), en retirant tout le code spécifique au métier (interventions, contrats, produits biocides, certificats, workflow terrain dératisation) et en ne gardant que l'infrastructure générique. Le socle n'est PAS une app fonctionnelle en soi — c'est un squelette prêt à recevoir n'importe quel métier.
+> Ce repo est l'application de gestion **de production** pour Flash Pneu, pneumaticien mobile intervenant à domicile et en entreprise en Paris / Île-de-France (vente, montage, dépannage 24/7). Ce n'est plus un template : c'est un projet client fini, en exploitation.
 
 ## Le projet
 
-Template SaaS multi-tenant de gestion pour PME. Chaque compte est isolé par RLS (`account_owner()`). Pas encore en production — en phase de construction et validation.
-- **Repo GitHub** : github.com/Salon-TY/socle-pme (privé) — push sur `main` uniquement après validation.
+Application de gestion pour Flash Pneu : interventions terrain (montage, dépannage), véhicules clients, stock de pneus (garage + camions techniciens), devis/factures, trésorerie, statistiques, et une interface dédiée pour les techniciens mobiles. Chaque compte est isolé par RLS (`account_owner()`).
+- **Repo GitHub** : github.com/Salon-TY/Flash-Pneu (privé) — push sur `main` uniquement après validation.
 - **Stack** : TanStack Start + React 19 + shadcn/ui + Supabase + Netlify + bun.
 - **Design** : tokens OKLCH dans `src/styles.css`, couleur d'accent configurable via `brand.ts`, style premium inspiré Linear/Stripe/Fady (fond gris clair, cartes blanches arrondies, ombres douces, accent parcimonieux).
 
-## Architecture en 2 couches
+## Origine et lien avec le socle
+
+Flash Pneu est un fork de [`socle-pme`](https://github.com/Salon-TY/socle-pme) (template SaaS multi-tenant générique), lui-même extrait de `derat-saas` (app de gestion pour dératiseurs) en retirant le code spécifique à ce premier métier. La couche métier Flash Pneu (interventions pneus, véhicules, stock pneus, vocabulaire) a été ajoutée par-dessus l'infrastructure générique du socle (auth multi-tenant, permissions, 2 shells, design system, facturation, devis, stock, clients, trésorerie, stats, PDF engine).
+
+Cette généalogie reste pertinente même pour un projet fini : si un bug est découvert ici et qu'il vient du socle (pas de la couche métier Flash Pneu), il doit être corrigé **aussi** dans `socle-pme` — voir la règle « Capitalisation des bugs venant du socle » ci-dessous.
 
 ```
 ┌─────────────────────────────────────────────┐
-│  COUCHE MÉTIER (spécifique à un commerce)   │
-│  Tables métier, routes métier, vocabulaire, │
-│  PDF spécifiques, workflow terrain           │
+│  COUCHE MÉTIER (Flash Pneu)                 │
+│  interventions (montage/dépannage),         │
+│  véhicules clients, stock pneus, PDF pneus  │
 ├─────────────────────────────────────────────┤
-│  SOCLE (ce repo)                            │
+│  SOCLE (hérité de socle-pme)                │
 │  Auth multi-tenant, permissions, 2 shells,  │
 │  design system, facturation, devis, stock,  │
 │  clients, trésorerie, stats, PDF engine     │
 └─────────────────────────────────────────────┘
 ```
 
-**Règle d'or** : la couche métier **ajoute** du code au socle, elle ne le **modifie** jamais. Les seuls fichiers du socle qu'un projet métier modifie sont :
-1. `src/lib/brand.ts` — identité visuelle et labels
-2. `src/lib/permissions.ts` — ajout de nouvelles clés de permission (jamais supprimer les existantes)
-3. `src/routes/` — ajout de nouvelles routes (+ mise à jour manuelle de `routeTree.gen.ts`)
-4. `src/components/app-shell.tsx` — ajout de nav items pour les nouvelles routes
-5. `schema.sql` — ajout de tables métier (jamais modifier les tables socle)
-6. `src/integrations/supabase/types.ts` — ajout des types pour les nouvelles tables
+Fichiers modifiés par la couche métier Flash Pneu par rapport au socle nu : `src/lib/brand.ts`, `src/lib/permissions.ts`, `src/routes/` (routes interventions/véhicules/planning/analytique), `src/components/app-shell.tsx`, `schema.sql` + `migration-lot1.sql`, `src/integrations/supabase/types.ts`.
 
-**Règle des 3 demandes** : quand 3 projets métier différents ont besoin du même module (ex. réservation en ligne, chatbot IA, fidélité), on le descend dans le socle. Avant ça, c'est du code métier.
+> Section héritée du socle, **non applicable ici** : la « Règle des 3 demandes » (descendre un module dans le socle quand 3 métiers différents en ont besoin) concerne l'arbitrage entre plusieurs projets métier — elle se pilote côté `socle-pme`, pas ici.
 
 ## Configuration — brand.ts
 
-Fichier unique de personnalisation pour un projet métier :
+Personnalisation actuelle de Flash Pneu (`src/lib/brand.ts`) :
 ```ts
-// src/lib/brand.ts
-export const APP_NAME = "Mon App";              // Titre de l'app
-export const APP_TAGLINE = "Gestion simplifiée"; // Sous-titre dans le header mobile
-export const EMPLOYEE_EMAIL_DOMAIN = "team.app.local"; // Domaine des emails employés internes
+export const APP_NAME = "Flash Pneu";
+export const APP_TAGLINE = "Vente • Montage • Dépannage 24/7";
+export const TECH_TAGLINE = "Espace technicien";
+export { Wrench as DefaultIcon } from "lucide-react";
+export const EMPLOYEE_EMAIL_DOMAIN = "team.app.local";
+export const FALLBACK_ROUTE = "/";
+export const TECH_NAV_LABELS = { home: "Ma journée", stock: "Mon camion" };
 ```
-
-À terme, ce fichier s'enrichira (couleur primaire, gradient header, labels de navigation, etc.) mais il reste le SEUL point d'entrée de personnalisation non-code.
+Ce fichier reste le point d'entrée pour tout changement d'identité visuelle (nom, tagline, icône), mais il n'y a pas de nouveau métier à cadrer ici — Flash Pneu est le seul client de ce repo.
 
 ## Conventions NON négociables
 
@@ -58,7 +54,7 @@ export const EMPLOYEE_EMAIL_DOMAIN = "team.app.local"; // Domaine des emails emp
 
 - **RÈGLE STRUCTURELLE — séparation des interfaces.** Deux shells coexistent :
   - `AppShell` (`src/components/app-shell.tsx`) = interface bureau (owner + employés bureau). Sidebar desktop + bottom nav mobile + menu "Plus".
-  - `TechShell` (`src/components/tech-shell.tsx`) = interface terrain (techniciens/opérateurs). Bottom nav uniquement, jamais de sidebar — outil de terrain dédié.
+  - `TechShell` (`src/components/tech-shell.tsx`) = interface terrain (techniciens). Bottom nav uniquement, jamais de sidebar — outil de terrain dédié.
   - Un technicien (`poste === 'technicien'`, non-owner) ne rend JAMAIS un composant `_app.*`. `_app.tsx` le redirige vers `/tech` avant de monter AppShell. `tech.tsx` redirige symétriquement tout non-technicien vers `/`.
   - Ne JAMAIS compter sur un masquage `can(...)` ou `if (isTechnician)` pour protéger un technicien — la page ne doit tout simplement pas exister dans son arbre de rendu.
 
@@ -72,12 +68,20 @@ export const EMPLOYEE_EMAIL_DOMAIN = "team.app.local"; // Domaine des emails emp
 
 - **Service-role key** : JAMAIS côté client. Importer dynamiquement depuis `src/integrations/supabase/client.server.ts` DANS le handler serveur (jamais au niveau module d'un `.functions.ts`).
 
+### Cohérence code↔base
+
+- **RÈGLE PERMANENTE** : toute fonction/trigger référencé par le code DOIT avoir son `CREATE` dans un script SQL versionné (`schema.sql` ou `migration-lot1.sql`). Vérifier la cohérence code↔base à chaque livraison, jamais code-only.
+
+### Capitalisation des bugs venant du socle
+
+- **RÈGLE PERMANENTE** : quand un bug ou un piège est découvert sur ce projet, évaluer s'il vient du socle (`socle-pme`) ou de la couche métier Flash Pneu. Si le bug vient du socle : corriger la cause dans `socle-pme` (code + SQL versionné) ET documenter la leçon dans le CLAUDE.md de `socle-pme`, en plus de la correction ici. Une erreur corrigée uniquement ici mais pas dans le socle sera réhéritée par tous les futurs forks.
+
 ### Tooling & build
 
 - **bun uniquement** (jamais npm). Build : `bun run build`. Publish dir : `dist/client`.
-- **`src/routeTree.gen.ts` est géré À LA MAIN.** Le plugin TanStack Router ne le génère pas. Toute nouvelle route doit y être ajoutée manuellement. Piège : les fichiers `_prefix.*.tsx` (underscore) sont pathless — voir CLAUDE.md de derat-saas pour les détails du conflit de paths.
+- **`src/routeTree.gen.ts` est géré À LA MAIN.** Le plugin TanStack Router ne le génère pas. Toute nouvelle route doit y être ajoutée manuellement. Piège : les fichiers `_prefix.*.tsx` (underscore) sont pathless.
 - **`src/integrations/supabase/types.ts` est géré À LA MAIN** — mettre à jour à chaque changement de schéma DB.
-- Les migrations SQL sont exécutées manuellement dans **Supabase > SQL Editor** (pas de `supabase db push`).
+- Les migrations SQL sont exécutées manuellement dans **Supabase > SQL Editor** (pas de `supabase db push`). Deux fichiers versionnés : `schema.sql` (base héritée du socle) + `migration-lot1.sql` (couche métier Flash Pneu : véhicules, interventions pneus, etc.).
 - Variables Netlify (serveur) : `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`.
 
 ### Design & UI
@@ -105,9 +109,9 @@ Le modèle : chaque donnée appartient à un **compte** (le patron), pas à un u
 - **`team_members`** : `id, owner_id, user_id, email, role ('owner'|'employe'), active, username, display_name, poste ('bureau'|'technicien'), permissions (jsonb), created_at`.
 - **`company_settings`** : infos légales de la société (nom, SIRET, TVA, adresse, téléphone, email, IBAN/BIC, objectif CA). Lecture pour tout le compte, écriture owner uniquement.
 
-## Tables du socle
+## Tables de la base de données
 
-Tables génériques incluses dans le template (toutes protégées par RLS `account_owner()`) :
+Tables héritées du socle (`schema.sql`, toutes protégées par RLS `account_owner()`) :
 
 | Table | Rôle | Notes |
 |---|---|---|
@@ -116,34 +120,47 @@ Tables génériques incluses dans le template (toutes protégées par RLS `accou
 | `clients` | Fichier clients | Raison sociale, adresse, téléphone, email, SIRET, notes |
 | `invoices` + `invoice_lines` | Facturation | Numéro auto-incrémenté, statuts brouillon/envoyée/payée/retard, TVA |
 | `devis` + `devis_lines` | Devis | Statuts brouillon/envoyé/accepté/refusé/converti, TVA |
-| `stock_products` | Catalogue stock | Nom, unité, seuil d'alerte, prix d'achat |
+| `stock_products` | Catalogue stock (pneus) | Nom, unité, seuil d'alerte, prix d'achat |
 | `stock_levels` | Niveaux de stock | Par emplacement (garage=NULL, camion=technicien_id) |
 | `stock_movements` | Historique stock | Types : entrée, transfert, consommation, ajustement |
 | `stock_requests` | Demandes de réappro | Technicien → bureau, workflow servir/refuser |
 
-La couche métier ajoute ses propres tables (ex. `interventions`, `contracts`, `reservations`...) en suivant le même pattern : `user_id UUID REFERENCES auth.users DEFAULT auth.uid()`, trigger `set_account_owner`, policy RLS `account_owner()`.
+Tables ajoutées par la couche métier Flash Pneu (`migration-lot1.sql`) :
 
-## Modules du socle (routes incluses)
+| Table | Rôle | Notes |
+|---|---|---|
+| `vehicules` | Véhicules clients | Marque, modèle, immatriculation, dimension pneus, kilométrage — liés à `clients` |
+| `interventions` | Interventions terrain | Montage/dépannage — liées à `clients`, `vehicules`, `technicien_id`, `devis_id` |
+
+> ⚠️ Note technique : `schema.sql` contient encore une ancienne définition de `interventions` (colonnes dératisation, `IF NOT EXISTS`) héritée de `derat-saas` — la définition réellement utilisée en base est celle de `migration-lot1.sql`. Ne pas se fier aux colonnes de `interventions` dans `schema.sql` pour ce projet.
+
+Tables résiduelles de `derat-saas` présentes dans `schema.sql` mais **non utilisées** par Flash Pneu : `contracts`, `produits_biocides`, `relances`. À ne pas référencer dans du nouveau code.
+
+## Modules & routes
 
 | Module | Route(s) | Permission | Notes |
 |---|---|---|---|
 | Dashboard | `_app.index` | `accueil` | CA du mois, alertes, actions rapides |
 | Clients | `_app.clients.*` | `clients` | CRUD + fiche détaillée |
+| Véhicules | `_app.vehicules.*` | `vehicules` | Véhicules clients (marque, modèle, immat, dimension pneus) |
+| Interventions | `_app.interventions.*` | `interventions` | Montage/dépannage, création + suivi |
+| Planning | `_app.planning` | `planning` | Planification des interventions |
 | Factures | `_app.factures.*` | `factures` | CRUD + PDF aperçu éditable |
 | Devis | `_app.devis.*` | `devis` | CRUD + PDF aperçu éditable |
-| Stock | `_app.stock.*` | `stock` | Catalogue + niveaux garage/camions |
+| Stock | `_app.stock.*` | `stock` | Catalogue pneus + niveaux garage/camions |
 | Réappro | `_app.reappro.*` | `reappro` | Demandes technicien → bureau |
 | Trésorerie | `_app.tresorerie` | `tresorerie` | Vue financière |
 | Statistiques | `_app.stats` | `stats` | Stats par technicien, CA |
+| Analytique | `_app.analytique` | `analytique` | Analyse approfondie |
 | Équipe | `_app.equipe.*` | `equipe` (owner-only) | Gestion membres + permissions |
 | Paramètres | `_app.parametres` | `parametres` | Infos société, presets, export |
 | Auth | `auth` | — | Connexion identifiant/email + inscription owner |
 | Onboarding | `_app.onboarding` | — | Saisie initiale infos société |
-| Terrain | `tech.*` | — | Interface technicien (Ma journée, Mon stock) |
+| Terrain | `tech.*` | — | Interface technicien (Ma journée, Mon camion, interventions) |
 
-## Composants partagés du socle
+## Composants partagés
 
-Composants de présentation pure (aucun n'appelle Supabase ni ne contient de logique métier) :
+Composants de présentation pure (aucun n'appelle Supabase ni ne contient de logique métier), hérités du socle :
 
 - **Layout** : `Header`, `Sidebar`, `BottomNav`, `PageLayout` (PageContainer, PageHeader, PageActions, PageSection, SectionTitle)
 - **Cards** : `StatCard` (métrique cliquable), `AlertCard` (bannière tonalité), `TaskCard` (ligne tâche du jour), `QuickActionCard` (tuile action rapide), `DashboardHero` (carte CA dominante)
@@ -156,35 +173,13 @@ Composants de présentation pure (aucun n'appelle Supabase ni ne contient de log
 
 - `src/lib/queries.ts` : `useCurrentRole`, `useMyAccess`, `useMyPoste`, `useTeamMembers`, `useAssignableMembers`, `useSettings`, `useDashboardStats`, `useClients`, `useInvoices`, `useQuotes`, `useStockLevels`, `useStockMovements`, `useStockRequests`, `useMyTodoCount`, `resolveTechnicianName`.
 - `src/lib/schemas.ts` : schémas Zod (clientSchema, invoiceSchema, quoteSchema, settingsSchema, stockProductSchema), helpers (formatEUR, formatDateFR), statuts facture/devis.
-- `src/lib/permissions.ts` : `PermissionKey`, `PERMISSION_LABELS`, `PRESET_BUREAU`, `presetToPermissions`.
-- `src/lib/brand.ts` : APP_NAME, APP_TAGLINE, EMPLOYEE_EMAIL_DOMAIN.
+- `src/lib/permissions.ts` : `PermissionKey` (dont `interventions`, `planning`, `vehicules`, `analytique`), `PERMISSION_LABELS`, `PRESET_BUREAU`, `presetToPermissions`.
+- `src/lib/brand.ts` : APP_NAME, APP_TAGLINE, TECH_TAGLINE, EMPLOYEE_EMAIL_DOMAIN, FALLBACK_ROUTE, TECH_NAV_LABELS.
 - `src/lib/team.ts` : normalizeUsername, usernameToEmail, USERNAME_RE.
 - `src/lib/print.ts` : printDocument (PDF aperçu éditable).
 - `src/lib/photos.ts` : upload/suppression dans Supabase Storage.
 
-## Comment ajouter un métier (guide couche métier)
-
-Voir `MODULES.md` pour le guide complet. En résumé :
-
-1. **Forker** ce repo → nouveau repo pour le client/métier
-2. **brand.ts** : changer APP_NAME, APP_TAGLINE, couleurs
-3. **SQL** : ajouter les tables métier dans Supabase (même pattern RLS)
-4. **types.ts** : ajouter les types des nouvelles tables
-5. **permissions.ts** : ajouter les clés pour les nouveaux modules
-6. **Routes** : créer les fichiers `.tsx` + les enregistrer dans `routeTree.gen.ts`
-7. **app-shell.tsx** : ajouter les nav items pour les nouvelles routes
-8. **queries.ts** : ajouter les hooks pour les nouvelles tables
-9. **schemas.ts** : ajouter les schémas Zod + constantes métier
-10. **Build** : `bun run build` doit être vert avant tout commit
-11. **Restes de fork à vérifier** : un grep texte sur le vocabulaire de l'ancien métier ne suffit pas — certains restes sont visuels/binaires ou dans des chaînes construites dynamiquement. Vérifier explicitement chacun de ces points :
-    - Icônes `public/icon-192.png` / `icon-512.png` (favicon) — à régénérer pour le nouveau métier
-    - `apple-touch-icon` (lien dans le head de `src/routes/__root.tsx`)
-    - `manifest.webmanifest` : `name` / `short_name` / `description` / chemins des icônes
-    - `<title>` du head (`src/routes/__root.tsx`)
-    - `<meta name="description">` du head (idem)
-    - Logos de secours dans les templates PDF (`src/routes/_app.factures.$id.tsx` et `_app.devis.$id.tsx`, classe `.logo-icon` — souvent un emoji en dur)
-    - Taglines en dur sous le nom de société dans ces mêmes templates PDF
-    - Presets par défaut insérés par `handle_new_user()` dans le SQL de migration (`service_presets`)
+> Section héritée du socle, **non applicable ici** : le guide « Comment ajouter un métier » (fork du socle vers un nouveau client) vivait auparavant dans ce document et dans `MODULES.md`. Flash Pneu est un projet client fini — ce guide n'a plus d'usage ici. Pour forker vers un nouveau métier, se référer au CLAUDE.md de `socle-pme`.
 
 ## Subagents Claude Code
 
@@ -198,7 +193,7 @@ Specs dans `.claude/agents/` (chaque fichier = un prompt spécialisé) :
 | `pdf-builder` | Templates de documents | Modèle de document → template PDF via print.ts |
 | `reviewer-secu` | Relecture sécurité | Code complet → check-list RLS/permissions/fuites |
 
-Workflow séquentiel : cadrage → data → frontend → PDF → review. Robbie fait le lien entre les agents (copier-coller des outputs). Les agents ne communiquent pas entre eux.
+Robbie fait le lien entre les agents (copier-coller des outputs). Les agents ne communiquent pas entre eux.
 
 ## Pièges connus
 
@@ -216,4 +211,4 @@ Bugs déjà rencontrés et corrigés en prod — documentés pour ne pas les ré
 
 ## Phase actuelle
 
-🚧 **Phase 1 : Chirurgie** — retrait de tout le code spécifique dératisation (tables, routes, composants, vocabulaire, couleurs). Objectif : build vert avec un squelette fonctionnel mais vide de métier.
+✅ **Opérationnel** — Lot 1+2 livrés : stock, devis, interventions, interface terrain. Maintenance et évolutions au fil des besoins client.

@@ -54,8 +54,10 @@ function OnboardingPage() {
   }, [settings, form]);
 
   async function onSubmit(values: OnboardingForm) {
-    if (!settings?.user_id) return;
-    const { error } = await db.from("company_settings").update(values).eq("user_id", settings.user_id);
+    const { data: userData } = await db.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) { toast.error("Session expirée, reconnectez-vous."); return; }
+    const { error } = await db.from("company_settings").upsert({ user_id: userId, ...values }, { onConflict: "user_id" });
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["settings"] });
     toast.success("Société configurée");
